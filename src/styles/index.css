@@ -1,12 +1,26 @@
+.hovered {
+  cursor: pointer;
+  background-color: #eee;
+}
 
-/* 
+.eliminar {
+  float: right;
+}
 
-    You can write your own styles here...
-    
-    
-    ...Or you can use the import command to include 
-    other sylesheets into your bunde as well, e.j:
-    
-    import 'relative/path/to/stylesheet.scss';
 
-*/
+
+.items {
+  color: #a0a0a0;
+  font-size: 15px;
+}
+
+.md.col-5 {
+  font-size: 25px;
+}
+.list{
+    font-size: 20px;
+}
+
+.titulo{
+    align-items: center;
+}
