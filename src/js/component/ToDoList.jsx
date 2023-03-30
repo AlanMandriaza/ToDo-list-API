@@ -1,82 +1,101 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FaTrash } from "react-icons/fa";
 
 function ToDoList() {
-  // Estado para almacenar las tareas y su estado de "isHovering"
   const [ToDos, setToDos] = useState([]);
-  // Estado para almacenar el valor del campo de entrada de nueva tarea
   const [newToDo, setNewToDo] = useState("");
 
-  // Función que se ejecuta cuando se cambia el valor del campo de entrada de nueva tarea
+  useEffect(() => {
+    fetch("https://assets.breatheco.de/apis/fake/todos/user/alan")
+      .then((response) => response.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setToDos(data);
+        } else {
+          console.error("Fetched data is not an array:", data);
+        }
+      })
+      .catch((error) => console.error("Error fetching tasks:", error));
+  }, []);
+
   function handleNewToDoChange(event) {
     setNewToDo(event.target.value);
   }
 
-  // Función que se ejecuta cuando se agrega una nueva tarea
   function handleNewToDoAdd() {
     if (newToDo.trim() !== "") {
-      const newToDoObj = { id: Date.now(), text: newToDo, isHovering: false };  // genera un identificador único para cada tarea que se agrega a la lista.
-      // Agrega la nueva tarea al estado de tareas
-      setToDos([...ToDos, newToDoObj]);
-      // Borra el valor del campo de entrada de nueva tarea
-      setNewToDo("");
+      const newToDoObj = { label: newToDo, done: false };
+      const updatedToDos = [...ToDos, newToDoObj];
+      setToDos(updatedToDos);
+
+      fetch("https://assets.breatheco.de/apis/fake/todos/user/alan", {
+        method: "PUT",
+        body: JSON.stringify(updatedToDos),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+        .then((response) => response.json())
+        .then((data) => setNewToDo(""))
+        .catch((error) => console.error("Error updating tasks:", error));
     }
   }
 
-  // Función que se ejecuta cuando se elimina una tarea
   function handleToDoDelete(id) {
-    // Filtra la tarea con el ID dado y actualiza el estado de tareas
-    setToDos(ToDos.filter((ToDo) => ToDo.id !== id));
+    const updatedToDos = ToDos.filter((ToDo, index) => index !== id);
+    setToDos(updatedToDos);
+
+    fetch("https://assets.breatheco.de/apis/fake/todos/user/alan", {
+      method: "PUT",
+      body: JSON.stringify(updatedToDos),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+      .then((response) => response.json())
+      .catch((error) => console.error("Error updating tasks:", error));
   }
 
-  // Función que se ejecuta cuando el cursor entra o sale de una tarea
-  function handleToDoHover(id, isHovering) {
-    // Actualiza el estado de la tarea con el ID dado para indicar si el cursor está encima o no
-    setToDos(
-      ToDos.map((ToDo) => {
-        if (ToDo.id === id) {
-          return { ...ToDo, isHovering };
-        } else {
-          return { ...ToDo, isHovering: false };
-        }
-      })
-    );
-  }
-
-  // Función que se ejecuta cuando se presiona la tecla Enter en el campo de entrada de nueva tarea
   function handleKeyDown(event) {
     if (event.key === "Enter") {
       handleNewToDoAdd();
     }
   }
 
+  function handleClearAll() {
+    setToDos([]);
+
+    fetch("https://assets.breatheco.de/apis/fake/todos/user/alan", {
+      method: "PUT",
+      body: JSON.stringify([]),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+      .then((response) => response.json())
+      .catch((error) => console.error("Error clearing tasks:", error));
+  }
+
   return (
     <div className="container col-md-5 justify-content-center">
       <h1 className="text-center">ToDos List</h1>
       <div className="list">
-        {/* Mapea cada tarea en el estado de tareas y crea un elemento de lista para cada una */}
-        {ToDos.map((ToDo) => (
+        {ToDos.map((ToDo, index) => (
           <div
-            key={ToDo.id}
+            key={index}
             className="d-flex padding align-items-center justify-content-between border"
-            onMouseEnter={() => handleToDoHover(ToDo.id, true)}
-            onMouseLeave={() => handleToDoHover(ToDo.id, false)}
           >
-            <span>{ToDo.text}</span>
-            {/* Si el cursor está encima de la tarea, muestra el botón de eliminar */}
-            {ToDo.isHovering && (
-              <button
-                className="eliminar"
-                onClick={() => handleToDoDelete(ToDo.id)}
-              >
-                <FaTrash />
-              </button>
-            )}
+            <span>{ToDo.label}</span>
+            <button
+              className="eliminar"
+              onClick={() => handleToDoDelete(index)}
+            >
+              <FaTrash />
+            </button>
           </div>
         ))}
       </div>
       <div>
-        {/* Campo de entrada de nueva tarea */}
         <input
           type="text"
           className="form-control"
@@ -85,12 +104,15 @@ function ToDoList() {
           onChange={handleNewToDoChange}
           onKeyDown={handleKeyDown}
         />
-        {/* Contador de tareas pendientes */}
         <div className="items">
           <p>{ToDos.length} Items left</p>
         </div>
+        <button className="btn btn-danger" onClick={handleClearAll}>
+          Clear All Tasks
+        </button>
       </div>
     </div>
   );
 }
+
 export default ToDoList;
